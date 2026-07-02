@@ -1,0 +1,30 @@
+# RECALL project memory
+.recall/
+.codex_memory/
+
+# Dependencies and package managers
+node_modules/
+.pnpm-store/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+coverage/
+
+# Logs and local OS/editor files
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
