@@ -1,0 +1,17 @@
+{
+  "name": "usage-pulse",
+  "version": "0.1.0",
+  "description": "Local passive usage telemetry for Claude Code, Codex, and Kimi Code sessions.",
+  "author": {
+    "name": "0langas"
+  },
+  "homepage": "https://github.com/0langas/usage-pulse",
+  "repository": "https://github.com/0langas/usage-pulse",
+  "license": "MIT",
+  "keywords": ["usage", "telemetry", "local", "mcp", "hooks"],
+  "skills": "./skills/",
+  "commands": "./commands/",
+  "mcpServers": "./.mcp.json",
+  "hooks": "./hooks/hooks.json",
+  "defaultEnabled": true
+}

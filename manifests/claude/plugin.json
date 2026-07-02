@@ -1,0 +1,4 @@
+{
+  "schema": "https://code.claude.com/docs/en/plugins-reference",
+  "manifest": "../../.claude-plugin/plugin.json"
+}

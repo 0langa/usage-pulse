@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "usage-pulse": {
+      "command": "uv",
+      "args": ["run", "--project", "${PLUGIN_ROOT}", "usage-pulse-mcp"]
+    }
+  }
+}

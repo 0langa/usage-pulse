@@ -1,0 +1,4 @@
+{
+  "schema": "https://developers.openai.com/codex/plugins/build",
+  "manifest": "../../.codex-plugin/plugin.json"
+}
