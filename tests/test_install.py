@@ -27,12 +27,14 @@ def test_install_and_uninstall_against_temp_home(tmp_path: Path, monkeypatch: Mo
     monkeypatch.setenv("USAGE_PULSE_CLAUDE_SETTINGS", str(tmp_path / ".claude" / "settings.json"))
     monkeypatch.setenv("USAGE_PULSE_CODEX_CONFIG", str(tmp_path / ".codex" / "config.toml"))
     monkeypatch.setenv("USAGE_PULSE_KIMI_CONFIG", str(tmp_path / ".kimi" / "config.toml"))
+    monkeypatch.setenv("KIMI_CODE_HOME", str(tmp_path / ".kimi-code"))
     monkeypatch.setenv(
         "USAGE_PULSE_CLAUDE_PLUGIN_DIR", str(tmp_path / ".claude" / "skills" / "usage-pulse")
     )
     monkeypatch.setenv("USAGE_PULSE_CODEX_PLUGIN_DIR", str(tmp_path / "plugins" / "usage-pulse"))
     monkeypatch.setenv(
-        "USAGE_PULSE_KIMI_PLUGIN_DIR", str(tmp_path / ".kimi" / "plugins" / "usage-pulse")
+        "USAGE_PULSE_KIMI_PLUGIN_DIR",
+        str(tmp_path / ".kimi-code" / "plugins" / "managed" / "usage-pulse"),
     )
     source = Path(__file__).resolve().parents[1]
 
@@ -46,7 +48,25 @@ def test_install_and_uninstall_against_temp_home(tmp_path: Path, monkeypatch: Mo
     assert (tmp_path / ".codex" / "config.toml").read_text(encoding="utf-8").count(
         "usage-pulse"
     ) > 0
-    assert (tmp_path / ".kimi" / "config.toml").read_text(encoding="utf-8").count("[[hooks]]") > 0
+    assert not (tmp_path / ".kimi" / "config.toml").exists()
+
+    installed = json.loads(
+        (tmp_path / ".kimi-code" / "plugins" / "installed.json").read_text(encoding="utf-8")
+    )
+    entries = [p for p in installed["plugins"] if p.get("id") == "usage-pulse"]
+    assert len(entries) == 1
+    assert entries[0]["root"] == str(tmp_path / ".kimi-code" / "plugins" / "managed" / "usage-pulse")
+    assert entries[0]["source"] == "local-path"
+    assert "path" not in entries[0]
+    assert "name" not in entries[0]
+    assert not (tmp_path / ".kimi-code" / "mcp.json").exists()
+
+    receipt = install.Receipt(installed_at="now", source=str(source))
+    install.install_provider("kimi", source, receipt)
+    installed_again = json.loads(
+        (tmp_path / ".kimi-code" / "plugins" / "installed.json").read_text(encoding="utf-8")
+    )
+    assert len([p for p in installed_again["plugins"] if p.get("id") == "usage-pulse"]) == 1
 
     monkeypatch.setattr(sys, "argv", ["uninstall.py"])
     uninstall.main()

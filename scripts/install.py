@@ -133,41 +133,42 @@ def install_kimi(source: Path, receipt: Receipt) -> None:
     skills_dest = Path(os.environ.get("USAGE_PULSE_KIMI_SKILLS_DIR", kimi_home / "skills"))
     copy_plugin(source / "skills" / "usage-report", skills_dest / "usage-report", receipt)
     copy_plugin(source / "skills" / "using-pulse", skills_dest / "using-pulse", receipt)
-    config = Path(os.environ.get("USAGE_PULSE_KIMI_CONFIG", kimi_home / "config.toml"))
-    append_toml_block(config, kimi_toml_block(dest), receipt)
-    mcp_path = Path(os.environ.get("USAGE_PULSE_KIMI_MCP", kimi_home / "mcp.json"))
-    mcp_data = read_json(mcp_path)
-    servers = mcp_data.setdefault("mcpServers", {})
-    servers[PLUGIN_NAME] = {
-        "command": "uv",
-        "args": ["run", "--project", str(dest), "usage-pulse-mcp"],
-    }
-    write_json_transactional(mcp_path, mcp_data, receipt)
     installed = Path(
         os.environ.get("USAGE_PULSE_KIMI_INSTALLED", kimi_home / "plugins" / "installed.json")
     )
     installed_data = read_json(installed)
+    installed_data.setdefault("version", 1)
     raw_plugins = installed_data.get("plugins")
-    plugin_entry = {"name": PLUGIN_NAME, "enabled": True, "path": str(dest), "version": "0.1.0"}
-    if isinstance(raw_plugins, list):
-        installed_data["plugins"] = [
+    plugins = raw_plugins if isinstance(raw_plugins, list) else []
+    prior = next(
+        (
             item
-            for item in raw_plugins
-            if not (isinstance(item, dict) and item.get("name") == PLUGIN_NAME)
-        ]
-        installed_data["plugins"].append(plugin_entry)
-    else:
-        plugins = raw_plugins if isinstance(raw_plugins, dict) else {}
-        plugins[PLUGIN_NAME] = {
-            "enabled": True,
-            "path": str(dest),
-            "version": "0.1.0",
-        }
-        installed_data["plugins"] = plugins
+            for item in plugins
+            if isinstance(item, dict)
+            and (item.get("id") == PLUGIN_NAME or item.get("name") == PLUGIN_NAME)
+        ),
+        None,
+    )
+    now = timestamp()
+    plugin_entry = {
+        "id": PLUGIN_NAME,
+        "root": str(dest),
+        "source": "local-path",
+        "enabled": True,
+        "installedAt": prior.get("installedAt", now) if isinstance(prior, dict) else now,
+        "updatedAt": now,
+        "originalSource": str(source),
+    }
+    installed_data["plugins"] = [
+        item
+        for item in plugins
+        if not (
+            isinstance(item, dict)
+            and (item.get("id") == PLUGIN_NAME or item.get("name") == PLUGIN_NAME)
+        )
+    ]
+    installed_data["plugins"].append(plugin_entry)
     write_json_transactional(installed, installed_data, receipt)
-    legacy_home = home / ".kimi"
-    if legacy_home.exists() and "USAGE_PULSE_KIMI_CONFIG" not in os.environ:
-        append_toml_block(legacy_home / "config.toml", kimi_toml_block(dest), receipt)
 
 
 def mcp_config(dest: Path) -> dict[str, Any]:
