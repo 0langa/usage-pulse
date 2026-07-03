@@ -275,8 +275,6 @@ def remove_marker_block(text: str) -> str:
 
 
 def copy_plugin(source: Path, dest: Path, receipt: Receipt) -> None:
-    if dest.exists():
-        shutil.rmtree(dest)
     ignore = shutil.ignore_patterns(
         ".git",
         ".recall",
@@ -287,8 +285,10 @@ def copy_plugin(source: Path, dest: Path, receipt: Receipt) -> None:
         ".mypy_cache",
         ".ruff_cache",
     )
-    shutil.copytree(source, dest, ignore=ignore)
-    receipt.copies.append(str(dest))
+    existed = dest.exists()
+    shutil.copytree(source, dest, ignore=ignore, dirs_exist_ok=True)
+    if not existed:
+        receipt.copies.append(str(dest))
 
 
 def copy_file(source: Path, dest: Path, receipt: Receipt) -> None:
