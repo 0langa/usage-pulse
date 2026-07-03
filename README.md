@@ -26,7 +26,7 @@ uv sync
 uv run python scripts/install.py --provider all
 ```
 
-The installer copies the plugin into provider locations, patches settings transactionally, writes backups, and records `~/.usage-pulse/install-receipt.json`.
+The installer copies the plugin into provider plugin locations, writes backups for the small registry files it owns, and records `~/.usage-pulse/install-receipt.json`. Hook and MCP wiring comes from bundled plugin manifests instead of global hook/MCP config blocks.
 
 Uninstall:
 
@@ -36,9 +36,9 @@ uv run python scripts/uninstall.py
 
 ## Provider Assumptions
 
-- Claude Code: uses `.claude-plugin/plugin.json`, `hooks/hooks.json`, bundled MCP servers, commands, and user settings in `~/.claude/settings.json`, matching the Claude Code plugins reference.
-- Codex: uses `.codex-plugin/plugin.json`, `~/.agents/plugins/marketplace.json`, `~/.codex/config.toml`, and bundled hooks/MCP shape from OpenAI Codex plugin docs.
-- Kimi Code: plugin support is beta. Usage Pulse uses documented `~/.kimi/plugins/<name>/plugin.json`, `~/.kimi/config.toml` `[[hooks]]`, and `kimi mcp add` stdio MCP registration when the CLI is available.
+- Claude Code: installs as a skills-directory plugin under `~/.claude/skills/usage-pulse` with `.claude-plugin/plugin.json`, `hooks/hooks.json`, and bundled MCP.
+- Codex: uses `.codex-plugin/plugin.json`, `~/.agents/plugins/marketplace.json`, and a minimal plugin enable block in `~/.codex/config.toml`. Bundled hooks/MCP stay inside the plugin.
+- Kimi Code: installs under `~/.kimi-code/plugins/managed/usage-pulse` and records one `id/root/source/enabled` entry in `~/.kimi-code/plugins/installed.json`.
 
 ## MCP Tools
 

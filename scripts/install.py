@@ -67,26 +67,6 @@ def install_claude(source: Path, receipt: Receipt) -> None:
         os.environ.get("USAGE_PULSE_CLAUDE_PLUGIN_DIR", home / ".claude" / "skills" / PLUGIN_NAME)
     )
     copy_plugin(source, dest, receipt)
-    settings = Path(
-        os.environ.get("USAGE_PULSE_CLAUDE_SETTINGS", home / ".claude" / "settings.json")
-    )
-    data = read_json(settings)
-    hooks = data.setdefault("hooks", {})
-    for event in [
-        "SessionStart",
-        "UserPromptSubmit",
-        "PreToolUse",
-        "PostToolUse",
-        "PreCompact",
-        "Stop",
-    ]:
-        command = hook_command(dest, event, "claude")
-        add_claude_hook(hooks, event, command)
-    mcp_servers = data.setdefault("mcpServers", {})
-    mcp_servers[PLUGIN_NAME] = mcp_config(dest)
-    enabled = data.setdefault("enabledPlugins", {})
-    enabled[f"{PLUGIN_NAME}@skills-dir"] = True
-    write_json_transactional(settings, data, receipt)
     command_dest = Path(
         os.environ.get("USAGE_PULSE_CLAUDE_COMMAND", home / ".claude" / "commands" / "pulse.md")
     )
@@ -211,14 +191,9 @@ def hook_command(dest: Path, event: str, provider: str) -> str:
 
 
 def codex_toml_block(dest: Path) -> str:
-    escaped = toml_string(str(dest))
     return "\n".join(
         [
             MARKER_START,
-            '[mcp_servers."usage-pulse"]',
-            'command = "uv"',
-            f'args = ["run", "--project", {escaped}, "usage-pulse-mcp"]',
-            "",
             '[plugins."usage-pulse@personal"]',
             "enabled = true",
             MARKER_END,

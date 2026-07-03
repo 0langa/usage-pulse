@@ -1,0 +1,2 @@
+Usage Pulse stores local counters in ~/.usage-pulse/pulse.db and hook errors in ~/.usage-pulse/errors.log.
+

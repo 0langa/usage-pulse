@@ -1,0 +1,87 @@
+name: usage-pulse
+version: 0.1.0
+description: Local passive usage telemetry for Claude Code, Codex, and Kimi Code sessions.
+providers:
+  - claude
+  - codex
+  - kimi
+
+surfaces:
+  skills:
+    - name: pulse:usage-report
+      path: skills/usage-report/SKILL.md
+    - name: pulse:using-pulse
+      path: skills/using-pulse/SKILL.md
+  commands:
+    - name: pulse
+      path: commands/pulse.md
+      providers:
+        - claude
+        - kimi
+  hooks:
+    - event: SessionStart
+      script: hooks/session_start.py
+    - event: UserPromptSubmit
+      script: hooks/user_prompt_submit.py
+    - event: PreToolUse
+      script: hooks/pre_tool_use.py
+      matcher: .*
+      timeout_seconds: 10
+    - event: PostToolUse
+      script: hooks/post_tool_use.py
+      matcher: .*
+      timeout_seconds: 10
+    - event: PreCompact
+      script: hooks/pre_compact.py
+      timeout_seconds: 10
+    - event: Stop
+      script: hooks/stop.py
+      timeout_seconds: 10
+  mcp:
+    - name: usage-pulse
+      transport: stdio
+      package: module:usage_pulse.mcp_server
+
+install:
+  claude: ~/.claude/skills/usage-pulse/
+  codex: ~/.codex/plugins/usage-pulse/
+  kimi: ~/.kimi-code/plugins/managed/usage-pulse/
+
+metadata:
+  author: 0langa
+  license: MIT
+  homepage: https://github.com/0langa/usage-pulse
+  repository: https://github.com/0langa/usage-pulse
+  keywords:
+    - usage
+    - telemetry
+    - local
+    - mcp
+    - hooks
+  interface:
+    display_name: Usage Pulse
+    short_description: Local session usage telemetry.
+    long_description: >-
+      Usage Pulse passively records local per-session usage counters across AI
+      coding providers and exposes summaries through MCP.
+    developer_name: 0langa
+    category: Productivity
+    capabilities:
+      - Read
+      - Local
+      - Automation
+    website_url: https://github.com/0langa/usage-pulse
+    privacy_policy_url: https://github.com/0langa/usage-pulse
+    terms_of_service_url: https://github.com/0langa/usage-pulse
+    brand_color: "#256D5A"
+    default_prompt:
+      - Show my Usage Pulse report for today.
+      - Compare my Usage Pulse activity this week.
+  session_start_skill: pulse:using-pulse
+  skill_instructions: >-
+    Use Usage Pulse only for local usage summaries and hygiene. Do not estimate
+    pay-as-you-go spend.
+
+provider_extras:
+  claude:
+    defaultEnabled: true

@@ -43,11 +43,10 @@ def test_install_and_uninstall_against_temp_home(tmp_path: Path, monkeypatch: Mo
         install.install_provider(provider, source, receipt)
         receipt.save(tmp_path / ".usage-pulse" / "install-receipt.json")
 
-    claude = json.loads((tmp_path / ".claude" / "settings.json").read_text(encoding="utf-8"))
-    assert "usage-pulse" in claude["mcpServers"]
-    assert (tmp_path / ".codex" / "config.toml").read_text(encoding="utf-8").count(
-        "usage-pulse"
-    ) > 0
+    assert not (tmp_path / ".claude" / "settings.json").exists()
+    codex_config = (tmp_path / ".codex" / "config.toml").read_text(encoding="utf-8")
+    assert '[plugins."usage-pulse@personal"]' in codex_config
+    assert "[mcp_servers." not in codex_config
     assert not (tmp_path / ".kimi" / "config.toml").exists()
 
     installed = json.loads(
@@ -71,3 +70,14 @@ def test_install_and_uninstall_against_temp_home(tmp_path: Path, monkeypatch: Mo
     monkeypatch.setattr(sys, "argv", ["uninstall.py"])
     uninstall.main()
     assert not (tmp_path / ".usage-pulse" / "install-receipt.json").exists()
+
+
+def test_plugin_manifests_keep_provider_specific_hook_wiring() -> None:
+    root = Path(__file__).resolve().parents[1]
+    codex = json.loads((root / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    assert codex["hooks"] == "./hooks/codex-hooks.json"
+    codex_hooks = (root / "hooks" / "codex-hooks.json").read_text(encoding="utf-8")
+    claude_hooks = (root / "hooks" / "hooks.json").read_text(encoding="utf-8")
+    assert "--provider','codex'" in codex_hooks
+    assert "--provider','claude'" in claude_hooks
+    assert "[mcp_servers." not in codex_hooks

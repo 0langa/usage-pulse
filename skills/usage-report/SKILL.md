@@ -1,63 +1,77 @@
 ---
 name: pulse:usage-report
-description: Use this skill when the user asks how much they used today, this week, in a date range, or on a project. Call exactly one Usage Pulse MCP tool, then format the structured result.
+description: Use this skill when answering local Usage Pulse report questions, when the user asks usage today, when comparing date ranges, when grouping by project/provider/tool, or when exporting local usage counters. Use proactively for report requests.
 ---
 
 # Usage Report
 
-## Input
+## Purpose
 
-Receive a natural-language usage question, such as:
+Answer local usage questions from Usage Pulse data. Usage Pulse records local
+session counters only; it does not estimate dollar cost and does not fetch cloud
+billing data.
 
-- "How much did I use today?"
-- "How many prompts this week?"
-- "What tools did I use most?"
-- "Show usage on this project."
-- "Compare this week with last week."
+## Inputs
+
+Handle natural-language questions such as:
+
+```text
+How much did I use today?
+How many prompts this week?
+What tools did I use most?
+Show usage on this project.
+Compare this week with last week.
+Export my usage since Monday.
+```
+
+Resolve relative dates using the current date. State the interpreted date range
+when it matters.
 
 ## MCP Selection
 
-Call exactly one MCP tool.
+Call exactly one MCP tool for the first answer.
 
-Use `pulse.today` for today's totals or a general daily status question.
+```text
+Today / daily status                  -> pulse.today
+Current or named session detail       -> pulse.session
+Date range / week / month / project   -> pulse.range
+Top tools / MCP / subagents / project -> pulse.top
+Trend or versus prior window          -> pulse.compare
+Export to file                        -> pulse.export
+Delete local usage data               -> pulse.wipe
+```
 
-Use `pulse.session` for current-session or specific-session detail.
-
-Use `pulse.range` for date ranges, this week, this month, or project/provider grouping.
-
-Use `pulse.top` for leaderboards by tool, MCP server/tool, subagent, or project.
-
-Use `pulse.compare` for "versus last week", "up or down", or trend questions.
-
-Use `pulse.export` only when the user asks for a file dump.
-
-Use `pulse.wipe` only after explicit wipe/delete confirmation.
+Use `pulse.wipe` only after explicit confirmation from the user.
 
 ## Output Format
 
-Put the MCP `summary` first.
+Put the MCP `summary` first. Then show the smallest useful table.
 
-Then show the smallest useful table.
-
-Use columns that match the question:
+Daily or provider total:
 
 ```text
 Provider | Sessions | Prompts | Est. input tokens | Tool calls
 ```
 
-For project grouping:
+Project grouping:
 
 ```text
 Project | Sessions | Prompts | Tool calls | Duration
 ```
 
-For leaderboards:
+Leaderboard:
 
 ```text
 Rank | Item | Count | Duration
 ```
 
-End with one short note only when useful:
+Comparison:
+
+```text
+Window | Sessions | Prompts | Tool calls | Change
+```
+
+End with this note only when the user asks about tokens or cost:
 
 ```text
 Token counts are estimates. Usage Pulse does not estimate dollar cost.
@@ -67,31 +81,51 @@ Token counts are estimates. Usage Pulse does not estimate dollar cost.
 
 User: "How much did I use today?"
 
-Action: call `pulse.today`.
+Action:
 
-Response: summary first, then per-session/provider totals.
+```text
+pulse.today
+```
+
+Response: summary, provider/session table, optional token-estimate note.
 
 User: "Top tools this week"
 
-Action: call `pulse.top` with `by="tool"` and `window="7d"`.
+Action:
 
-Response: leaderboard table.
+```text
+pulse.top(by="tool", window="7d")
+```
+
+Response: ranked tool table.
 
 User: "Usage for this repo since Monday"
 
-Action: call `pulse.range` with date bounds and `group_by="project"`.
+Action:
 
-Response: project table.
+```text
+pulse.range(from="<Monday 00:00>", to="<now>", group_by="project")
+```
+
+Response: project totals with interpreted date range.
+
+User: "Compare Codex usage this week with last week"
+
+Action:
+
+```text
+pulse.compare(window="7d")
+```
+
+Response: current window, previous window, and change.
 
 ## Constraints
 
 Do not infer pay-as-you-go cost.
-
-Do not ask for cloud data.
-
-Do not expose prompt hashes unless user asks for raw detail.
-
-Do not call more than one MCP tool unless first result is empty or ambiguous.
+Do not ask for cloud billing data.
+Do not expose prompt hashes unless the user asks for raw detail.
+Do not call more than one MCP tool unless the first result is empty or ambiguous.
+Do not save RECALL memories from usage-report work unless the user explicitly asks.
 
 ## Troubleshooting
 
@@ -99,8 +133,13 @@ If data is empty, say Usage Pulse has no matching local records.
 
 If a date is vague, choose the nearest normal interpretation and state it.
 
-If the MCP call fails, report the failure briefly and mention `~/.usage-pulse/errors.log`.
+If the MCP call fails, report the failure briefly and mention
+`~/.usage-pulse/errors.log`.
+
+If provider totals look wrong after reinstall, check the provider-specific plugin
+install state before blaming captured data.
 
 ## Related
 
-See `pulse:using-pulse` for what Usage Pulse captures and where it stores data.
+Use `pulse:using-pulse` when the user asks what Usage Pulse captures, where it
+stores data, or how the plugin works.
