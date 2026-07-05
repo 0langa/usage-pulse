@@ -78,6 +78,12 @@ def test_plugin_manifests_keep_provider_specific_hook_wiring() -> None:
     assert codex["hooks"] == "./hooks/codex-hooks.json"
     codex_hooks = (root / "hooks" / "codex-hooks.json").read_text(encoding="utf-8")
     claude_hooks = (root / "hooks" / "hooks.json").read_text(encoding="utf-8")
-    assert "--provider','codex'" in codex_hooks
+    assert "--provider codex" in codex_hooks
     assert "--provider','claude'" in claude_hooks
     assert "[mcp_servers." not in codex_hooks
+    parsed_hooks = json.loads(codex_hooks)
+    for groups in parsed_hooks["hooks"].values():
+        for group in groups:
+            for hook in group["hooks"]:
+                assert "uv run --project \"$root\" usage-pulse-hook" in hook["command"]
+                assert "uv run --project $root usage-pulse-hook" in hook["commandWindows"]
