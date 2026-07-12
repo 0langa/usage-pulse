@@ -1,32 +1,46 @@
 {
   "name": "usage-pulse",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Local passive usage telemetry for Claude Code, Codex, and Kimi Code sessions.",
   "author": {
-    "name": "0langas",
-    "url": "https://github.com/0langas"
+    "name": "0langa"
   },
-  "homepage": "https://github.com/0langas/usage-pulse",
-  "repository": "https://github.com/0langas/usage-pulse",
+  "homepage": "https://github.com/0langa/usage-pulse",
+  "repository": "https://github.com/0langa/usage-pulse",
   "license": "MIT",
-  "keywords": ["usage", "telemetry", "local", "mcp", "hooks"],
+  "keywords": [
+    "usage",
+    "telemetry",
+    "local",
+    "mcp",
+    "hooks"
+  ],
   "skills": "./skills/",
-  "mcpServers": "./.mcp.json",
-  "hooks": "./hooks/codex-hooks.json",
   "interface": {
     "displayName": "Usage Pulse",
-    "shortDescription": "Local session usage telemetry",
+    "shortDescription": "Local session usage telemetry.",
     "longDescription": "Usage Pulse passively records local per-session usage counters across AI coding providers and exposes summaries through MCP.",
-    "developerName": "0langas",
+    "developerName": "0langa",
     "category": "Productivity",
-    "capabilities": ["Read", "Local", "Automation"],
-    "websiteURL": "https://github.com/0langas/usage-pulse",
-    "privacyPolicyURL": "https://github.com/0langas/usage-pulse",
-    "termsOfServiceURL": "https://github.com/0langas/usage-pulse",
+    "capabilities": [
+      "Read",
+      "Local",
+      "Automation"
+    ],
+    "websiteURL": "https://github.com/0langa/usage-pulse",
+    "privacyPolicyURL": "https://github.com/0langa/usage-pulse",
+    "termsOfServiceURL": "https://github.com/0langa/usage-pulse",
     "defaultPrompt": [
       "Show my Usage Pulse report for today.",
       "Compare my Usage Pulse activity this week."
     ],
-    "brandColor": "#256D5A"
-  }
+    "brandColor": "#19D39A",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/logo.png",
+    "screenshots": [
+      "./assets/screenshot-1.png"
+    ]
+  },
+  "mcpServers": "./.codex-mcp.json",
+  "hooks": "./hooks/codex-hooks.json"
 }

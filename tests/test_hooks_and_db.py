@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from contextlib import closing
 from datetime import datetime
 from pathlib import Path
 
@@ -61,10 +62,10 @@ def test_hooks_record_session_prompt_tool_and_summary(
 
     assert summary is not None
     assert "usage-pulse:" in summary
-    conn = sqlite3.connect(tmp_path / "pulse.db")
-    row = conn.execute(
-        "SELECT prompt_count, tool_call_count, file_read_count, hook_fire_count FROM sessions"
-    ).fetchone()
+    with closing(sqlite3.connect(tmp_path / "pulse.db")) as conn:
+        row = conn.execute(
+            "SELECT prompt_count, tool_call_count, file_read_count, hook_fire_count FROM sessions"
+        ).fetchone()
     assert row == (1, 1, 1, 5)
 
 

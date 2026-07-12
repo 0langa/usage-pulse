@@ -1,63 +1,75 @@
 {
   "name": "usage-pulse",
-  "version": "0.1.0",
-  "description": "Local passive usage telemetry for Kimi Code sessions.",
-  "keywords": ["usage", "telemetry", "local", "mcp", "hooks"],
+  "version": "0.1.1",
+  "description": "Local passive usage telemetry for Claude Code, Codex, and Kimi Code sessions.",
   "author": {
-    "name": "0langas"
+    "name": "0langa"
   },
-  "homepage": "https://github.com/0langas/usage-pulse",
+  "homepage": "https://github.com/0langa/usage-pulse",
+  "repository": "https://github.com/0langa/usage-pulse",
   "license": "MIT",
+  "keywords": [
+    "usage",
+    "telemetry",
+    "local",
+    "mcp",
+    "hooks"
+  ],
   "skills": "./skills/",
   "commands": "./commands/",
+  "interface": {
+    "displayName": "Usage Pulse",
+    "shortDescription": "Local session usage telemetry.",
+    "longDescription": "Usage Pulse passively records local per-session usage counters across AI coding providers and exposes summaries through MCP.",
+    "developerName": "0langa",
+    "websiteURL": "https://github.com/0langa/usage-pulse",
+    "brandColor": "#19D39A"
+  },
   "sessionStart": {
     "skill": "pulse:using-pulse"
   },
-  "interface": {
-    "displayName": "Usage Pulse",
-    "shortDescription": "Local session usage telemetry",
-    "longDescription": "Passively records local per-session usage counters and exposes reports through MCP.",
-    "developerName": "0langas",
-    "websiteURL": "https://github.com/0langas/usage-pulse"
-  },
+  "skillInstructions": "Use Usage Pulse only for local usage summaries and hygiene. Do not estimate pay-as-you-go spend.",
   "mcpServers": {
     "usage-pulse": {
       "command": "uv",
-      "args": ["run", "--project", ".", "usage-pulse-mcp"],
+      "args": [
+        "run",
+        "python",
+        "-m",
+        "usage_pulse.mcp_server"
+      ],
       "cwd": "./"
     }
   },
   "hooks": [
     {
       "event": "SessionStart",
-      "command": "py -3 -c \"import os,runpy,sys; root=os.environ.get('KIMI_PLUGIN_ROOT') or os.getcwd(); sys.argv=['usage-pulse-hook','SessionStart','--provider','kimi']; sys.path.insert(0, os.path.join(root,'src')); runpy.run_path(os.path.join(root,'hooks','session_start.py'), run_name='__main__')\"",
-      "timeout": 10
+      "command": "py -3 -c \"import os,runpy,sys; root=os.environ.get('KIMI_PLUGIN_ROOT') or os.getcwd(); sys.argv=['plugin-hook', 'SessionStart', '--provider', 'kimi']; sys.path.insert(0, os.path.join(root,'src')); runpy.run_path(os.path.join(root, 'hooks/session_start.py'), run_name='__main__')\""
     },
     {
       "event": "UserPromptSubmit",
-      "command": "py -3 -c \"import os,runpy,sys; root=os.environ.get('KIMI_PLUGIN_ROOT') or os.getcwd(); sys.argv=['usage-pulse-hook','UserPromptSubmit','--provider','kimi']; sys.path.insert(0, os.path.join(root,'src')); runpy.run_path(os.path.join(root,'hooks','user_prompt_submit.py'), run_name='__main__')\"",
-      "timeout": 10
+      "command": "py -3 -c \"import os,runpy,sys; root=os.environ.get('KIMI_PLUGIN_ROOT') or os.getcwd(); sys.argv=['plugin-hook', 'UserPromptSubmit', '--provider', 'kimi']; sys.path.insert(0, os.path.join(root,'src')); runpy.run_path(os.path.join(root, 'hooks/user_prompt_submit.py'), run_name='__main__')\""
     },
     {
       "event": "PreToolUse",
+      "command": "py -3 -c \"import os,runpy,sys; root=os.environ.get('KIMI_PLUGIN_ROOT') or os.getcwd(); sys.argv=['plugin-hook', 'PreToolUse', '--provider', 'kimi']; sys.path.insert(0, os.path.join(root,'src')); runpy.run_path(os.path.join(root, 'hooks/pre_tool_use.py'), run_name='__main__')\"",
       "matcher": ".*",
-      "command": "py -3 -c \"import os,runpy,sys; root=os.environ.get('KIMI_PLUGIN_ROOT') or os.getcwd(); sys.argv=['usage-pulse-hook','PreToolUse','--provider','kimi']; sys.path.insert(0, os.path.join(root,'src')); runpy.run_path(os.path.join(root,'hooks','pre_tool_use.py'), run_name='__main__')\"",
       "timeout": 10
     },
     {
       "event": "PostToolUse",
+      "command": "py -3 -c \"import os,runpy,sys; root=os.environ.get('KIMI_PLUGIN_ROOT') or os.getcwd(); sys.argv=['plugin-hook', 'PostToolUse', '--provider', 'kimi']; sys.path.insert(0, os.path.join(root,'src')); runpy.run_path(os.path.join(root, 'hooks/post_tool_use.py'), run_name='__main__')\"",
       "matcher": ".*",
-      "command": "py -3 -c \"import os,runpy,sys; root=os.environ.get('KIMI_PLUGIN_ROOT') or os.getcwd(); sys.argv=['usage-pulse-hook','PostToolUse','--provider','kimi']; sys.path.insert(0, os.path.join(root,'src')); runpy.run_path(os.path.join(root,'hooks','post_tool_use.py'), run_name='__main__')\"",
       "timeout": 10
     },
     {
       "event": "PreCompact",
-      "command": "py -3 -c \"import os,runpy,sys; root=os.environ.get('KIMI_PLUGIN_ROOT') or os.getcwd(); sys.argv=['usage-pulse-hook','PreCompact','--provider','kimi']; sys.path.insert(0, os.path.join(root,'src')); runpy.run_path(os.path.join(root,'hooks','pre_compact.py'), run_name='__main__')\"",
+      "command": "py -3 -c \"import os,runpy,sys; root=os.environ.get('KIMI_PLUGIN_ROOT') or os.getcwd(); sys.argv=['plugin-hook', 'PreCompact', '--provider', 'kimi']; sys.path.insert(0, os.path.join(root,'src')); runpy.run_path(os.path.join(root, 'hooks/pre_compact.py'), run_name='__main__')\"",
       "timeout": 10
     },
     {
       "event": "Stop",
-      "command": "py -3 -c \"import os,runpy,sys; root=os.environ.get('KIMI_PLUGIN_ROOT') or os.getcwd(); sys.argv=['usage-pulse-hook','Stop','--provider','kimi']; sys.path.insert(0, os.path.join(root,'src')); runpy.run_path(os.path.join(root,'hooks','stop.py'), run_name='__main__')\"",
+      "command": "py -3 -c \"import os,runpy,sys; root=os.environ.get('KIMI_PLUGIN_ROOT') or os.getcwd(); sys.argv=['plugin-hook', 'Stop', '--provider', 'kimi']; sys.path.insert(0, os.path.join(root,'src')); runpy.run_path(os.path.join(root, 'hooks/stop.py'), run_name='__main__')\"",
       "timeout": 10
     }
   ]

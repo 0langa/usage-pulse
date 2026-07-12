@@ -5,10 +5,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "root=\"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-$PWD}}\"; uv run --project \"$root\" usage-pulse-hook SessionStart --provider codex",
-            "commandWindows": "$root = if ($env:PLUGIN_ROOT) { $env:PLUGIN_ROOT } elseif ($env:CLAUDE_PLUGIN_ROOT) { $env:CLAUDE_PLUGIN_ROOT } else { (Get-Location).Path }; uv run --project $root usage-pulse-hook SessionStart --provider codex",
-            "statusMessage": "Usage Pulse session open",
-            "timeout": 10
+            "command": "root=\"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-$PWD}}\"; uv run --project \"$root\" python \"$root/hooks/session_start.py\" \"SessionStart\" \"--provider\" \"codex\"",
+            "commandWindows": "$root = if ($env:PLUGIN_ROOT) { $env:PLUGIN_ROOT } elseif ($env:CLAUDE_PLUGIN_ROOT) { $env:CLAUDE_PLUGIN_ROOT } else { (Get-Location).Path }; uv run --project $root python (Join-Path $root 'hooks\\session_start.py') \"SessionStart\" \"--provider\" \"codex\"",
+            "statusMessage": "Usage Pulse session open"
           }
         ]
       }
@@ -18,40 +17,39 @@
         "hooks": [
           {
             "type": "command",
-            "command": "root=\"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-$PWD}}\"; uv run --project \"$root\" usage-pulse-hook UserPromptSubmit --provider codex",
-            "commandWindows": "$root = if ($env:PLUGIN_ROOT) { $env:PLUGIN_ROOT } elseif ($env:CLAUDE_PLUGIN_ROOT) { $env:CLAUDE_PLUGIN_ROOT } else { (Get-Location).Path }; uv run --project $root usage-pulse-hook UserPromptSubmit --provider codex",
-            "statusMessage": "Usage Pulse prompt counted",
-            "timeout": 10
+            "command": "root=\"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-$PWD}}\"; uv run --project \"$root\" python \"$root/hooks/user_prompt_submit.py\" \"UserPromptSubmit\" \"--provider\" \"codex\"",
+            "commandWindows": "$root = if ($env:PLUGIN_ROOT) { $env:PLUGIN_ROOT } elseif ($env:CLAUDE_PLUGIN_ROOT) { $env:CLAUDE_PLUGIN_ROOT } else { (Get-Location).Path }; uv run --project $root python (Join-Path $root 'hooks\\user_prompt_submit.py') \"UserPromptSubmit\" \"--provider\" \"codex\"",
+            "statusMessage": "Usage Pulse prompt counted"
           }
         ]
       }
     ],
     "PreToolUse": [
       {
-        "matcher": ".*",
         "hooks": [
           {
             "type": "command",
-            "command": "root=\"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-$PWD}}\"; uv run --project \"$root\" usage-pulse-hook PreToolUse --provider codex",
-            "commandWindows": "$root = if ($env:PLUGIN_ROOT) { $env:PLUGIN_ROOT } elseif ($env:CLAUDE_PLUGIN_ROOT) { $env:CLAUDE_PLUGIN_ROOT } else { (Get-Location).Path }; uv run --project $root usage-pulse-hook PreToolUse --provider codex",
+            "command": "root=\"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-$PWD}}\"; uv run --project \"$root\" python \"$root/hooks/pre_tool_use.py\" \"PreToolUse\" \"--provider\" \"codex\"",
+            "commandWindows": "$root = if ($env:PLUGIN_ROOT) { $env:PLUGIN_ROOT } elseif ($env:CLAUDE_PLUGIN_ROOT) { $env:CLAUDE_PLUGIN_ROOT } else { (Get-Location).Path }; uv run --project $root python (Join-Path $root 'hooks\\pre_tool_use.py') \"PreToolUse\" \"--provider\" \"codex\"",
             "statusMessage": "Usage Pulse tool start",
             "timeout": 10
           }
-        ]
+        ],
+        "matcher": ".*"
       }
     ],
     "PostToolUse": [
       {
-        "matcher": ".*",
         "hooks": [
           {
             "type": "command",
-            "command": "root=\"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-$PWD}}\"; uv run --project \"$root\" usage-pulse-hook PostToolUse --provider codex",
-            "commandWindows": "$root = if ($env:PLUGIN_ROOT) { $env:PLUGIN_ROOT } elseif ($env:CLAUDE_PLUGIN_ROOT) { $env:CLAUDE_PLUGIN_ROOT } else { (Get-Location).Path }; uv run --project $root usage-pulse-hook PostToolUse --provider codex",
+            "command": "root=\"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-$PWD}}\"; uv run --project \"$root\" python \"$root/hooks/post_tool_use.py\" \"PostToolUse\" \"--provider\" \"codex\"",
+            "commandWindows": "$root = if ($env:PLUGIN_ROOT) { $env:PLUGIN_ROOT } elseif ($env:CLAUDE_PLUGIN_ROOT) { $env:CLAUDE_PLUGIN_ROOT } else { (Get-Location).Path }; uv run --project $root python (Join-Path $root 'hooks\\post_tool_use.py') \"PostToolUse\" \"--provider\" \"codex\"",
             "statusMessage": "Usage Pulse tool done",
             "timeout": 10
           }
-        ]
+        ],
+        "matcher": ".*"
       }
     ],
     "PreCompact": [
@@ -59,8 +57,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "root=\"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-$PWD}}\"; uv run --project \"$root\" usage-pulse-hook PreCompact --provider codex",
-            "commandWindows": "$root = if ($env:PLUGIN_ROOT) { $env:PLUGIN_ROOT } elseif ($env:CLAUDE_PLUGIN_ROOT) { $env:CLAUDE_PLUGIN_ROOT } else { (Get-Location).Path }; uv run --project $root usage-pulse-hook PreCompact --provider codex",
+            "command": "root=\"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-$PWD}}\"; uv run --project \"$root\" python \"$root/hooks/pre_compact.py\" \"PreCompact\" \"--provider\" \"codex\"",
+            "commandWindows": "$root = if ($env:PLUGIN_ROOT) { $env:PLUGIN_ROOT } elseif ($env:CLAUDE_PLUGIN_ROOT) { $env:CLAUDE_PLUGIN_ROOT } else { (Get-Location).Path }; uv run --project $root python (Join-Path $root 'hooks\\pre_compact.py') \"PreCompact\" \"--provider\" \"codex\"",
             "statusMessage": "Usage Pulse compact counted",
             "timeout": 10
           }
@@ -72,8 +70,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "root=\"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-$PWD}}\"; uv run --project \"$root\" usage-pulse-hook Stop --provider codex",
-            "commandWindows": "$root = if ($env:PLUGIN_ROOT) { $env:PLUGIN_ROOT } elseif ($env:CLAUDE_PLUGIN_ROOT) { $env:CLAUDE_PLUGIN_ROOT } else { (Get-Location).Path }; uv run --project $root usage-pulse-hook Stop --provider codex",
+            "command": "root=\"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-$PWD}}\"; uv run --project \"$root\" python \"$root/hooks/stop.py\" \"Stop\" \"--provider\" \"codex\"",
+            "commandWindows": "$root = if ($env:PLUGIN_ROOT) { $env:PLUGIN_ROOT } elseif ($env:CLAUDE_PLUGIN_ROOT) { $env:CLAUDE_PLUGIN_ROOT } else { (Get-Location).Path }; uv run --project $root python (Join-Path $root 'hooks\\stop.py') \"Stop\" \"--provider\" \"codex\"",
             "statusMessage": "Usage Pulse summary",
             "timeout": 10
           }

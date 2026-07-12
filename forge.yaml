@@ -1,87 +1,186 @@
 name: usage-pulse
-version: 0.1.0
+version: 0.1.1
 description: Local passive usage telemetry for Claude Code, Codex, and Kimi Code sessions.
 providers:
-  - claude
-  - codex
-  - kimi
-
+- claude
+- codex
+- kimi
 surfaces:
   skills:
-    - name: pulse:usage-report
-      path: skills/usage-report/SKILL.md
-    - name: pulse:using-pulse
-      path: skills/using-pulse/SKILL.md
+  - name: pulse:usage-report
+    path: skills/usage-report/SKILL.md
+  - name: pulse:using-pulse
+    path: skills/using-pulse/SKILL.md
   commands:
-    - name: pulse
-      path: commands/pulse.md
-      providers:
-        - claude
-        - kimi
+  - name: pulse
+    path: commands/pulse.md
+    providers:
+    - claude
+    - kimi
+  agents: []
   hooks:
-    - event: SessionStart
-      script: hooks/session_start.py
-    - event: UserPromptSubmit
-      script: hooks/user_prompt_submit.py
-    - event: PreToolUse
-      script: hooks/pre_tool_use.py
-      matcher: .*
-      timeout_seconds: 10
-    - event: PostToolUse
-      script: hooks/post_tool_use.py
-      matcher: .*
-      timeout_seconds: 10
-    - event: PreCompact
-      script: hooks/pre_compact.py
-      timeout_seconds: 10
-    - event: Stop
-      script: hooks/stop.py
-      timeout_seconds: 10
+  - event: SessionStart
+    script: hooks/session_start.py
+    matchers:
+      claude: startup|resume|compact
+    args:
+      claude:
+      - SessionStart
+      - --provider
+      - claude
+      codex:
+      - SessionStart
+      - --provider
+      - codex
+      kimi:
+      - SessionStart
+      - --provider
+      - kimi
+    status_message: Usage Pulse session open
+  - event: UserPromptSubmit
+    script: hooks/user_prompt_submit.py
+    matchers: {}
+    args:
+      claude:
+      - UserPromptSubmit
+      - --provider
+      - claude
+      codex:
+      - UserPromptSubmit
+      - --provider
+      - codex
+      kimi:
+      - UserPromptSubmit
+      - --provider
+      - kimi
+    status_message: Usage Pulse prompt counted
+  - event: PreToolUse
+    script: hooks/pre_tool_use.py
+    matcher: .*
+    matchers: {}
+    args:
+      claude:
+      - PreToolUse
+      - --provider
+      - claude
+      codex:
+      - PreToolUse
+      - --provider
+      - codex
+      kimi:
+      - PreToolUse
+      - --provider
+      - kimi
+    status_message: Usage Pulse tool start
+    timeout_seconds: 10
+  - event: PostToolUse
+    script: hooks/post_tool_use.py
+    matcher: .*
+    matchers: {}
+    args:
+      claude:
+      - PostToolUse
+      - --provider
+      - claude
+      codex:
+      - PostToolUse
+      - --provider
+      - codex
+      kimi:
+      - PostToolUse
+      - --provider
+      - kimi
+    status_message: Usage Pulse tool done
+    timeout_seconds: 10
+  - event: PreCompact
+    script: hooks/pre_compact.py
+    matchers:
+      claude: manual|auto
+    args:
+      claude:
+      - PreCompact
+      - --provider
+      - claude
+      codex:
+      - PreCompact
+      - --provider
+      - codex
+      kimi:
+      - PreCompact
+      - --provider
+      - kimi
+    status_message: Usage Pulse compact counted
+    timeout_seconds: 10
+  - event: Stop
+    script: hooks/stop.py
+    matchers: {}
+    args:
+      claude:
+      - Stop
+      - --provider
+      - claude
+      codex:
+      - Stop
+      - --provider
+      - codex
+      kimi:
+      - Stop
+      - --provider
+      - kimi
+    status_message: Usage Pulse summary
+    timeout_seconds: 10
   mcp:
-    - name: usage-pulse
-      transport: stdio
-      package: module:usage_pulse.mcp_server
-
+  - name: usage-pulse
+    transport: stdio
+    package: module:usage_pulse.mcp_server
+    env: []
+    args: []
 install:
   claude: ~/.claude/skills/usage-pulse/
   codex: ~/.codex/plugins/usage-pulse/
   kimi: ~/.kimi-code/plugins/managed/usage-pulse/
-
+settings_patches: {}
+marketplace: {}
 metadata:
   author: 0langa
   license: MIT
   homepage: https://github.com/0langa/usage-pulse
   repository: https://github.com/0langa/usage-pulse
   keywords:
-    - usage
-    - telemetry
-    - local
-    - mcp
-    - hooks
+  - usage
+  - telemetry
+  - local
+  - mcp
+  - hooks
   interface:
     display_name: Usage Pulse
     short_description: Local session usage telemetry.
-    long_description: >-
-      Usage Pulse passively records local per-session usage counters across AI
-      coding providers and exposes summaries through MCP.
+    long_description: Usage Pulse passively records local per-session usage counters
+      across AI coding providers and exposes summaries through MCP.
     developer_name: 0langa
     category: Productivity
     capabilities:
-      - Read
-      - Local
-      - Automation
+    - Read
+    - Local
+    - Automation
     website_url: https://github.com/0langa/usage-pulse
     privacy_policy_url: https://github.com/0langa/usage-pulse
     terms_of_service_url: https://github.com/0langa/usage-pulse
-    brand_color: "#256D5A"
+    brand_color: '#19D39A'
+    composer_icon: ./assets/icon.png
+    logo: ./assets/logo.png
+    screenshots:
+    - ./assets/screenshot-1.png
     default_prompt:
-      - Show my Usage Pulse report for today.
-      - Compare my Usage Pulse activity this week.
+    - Show my Usage Pulse report for today.
+    - Compare my Usage Pulse activity this week.
   session_start_skill: pulse:using-pulse
-  skill_instructions: >-
-    Use Usage Pulse only for local usage summaries and hygiene. Do not estimate
-    pay-as-you-go spend.
-
+  skill_instructions: Use Usage Pulse only for local usage summaries and hygiene.
+    Do not estimate pay-as-you-go spend.
 provider_extras:
   claude:
     defaultEnabled: true
+  codex: {}
+  kimi: {}
+options:
+  shared_mcp_file: false
