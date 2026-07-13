@@ -4,8 +4,6 @@
       "command": "uv",
       "args": [
         "run",
-        "--with-editable",
-        ".",
         "python",
         "-m",
         "usage_pulse.mcp_server"

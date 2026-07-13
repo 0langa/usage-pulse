@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.2] - 2026-07-13
+
+- Declared bundled Claude hooks in plugin metadata.
+- Removed editable-install flags from generated MCP launch commands so cached installs remain portable.
+
 ## [0.1.1] - 2026-07-12
 
 - Preserved provider identity, matchers, and status messages in Forge-generated hooks.
