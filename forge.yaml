@@ -1,5 +1,5 @@
 name: usage-pulse
-version: 0.1.2
+version: 0.1.3
 description: Local passive usage telemetry for Claude Code, Codex, and Kimi Code sessions.
 providers:
 - claude

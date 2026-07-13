@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.1.3] - 2026-07-13
+
+- Removed duplicate Claude hook declaration and rely on standard `hooks/hooks.json` autodiscovery.
+
 ## [0.1.2] - 2026-07-13
 
 - Declared bundled Claude hooks in plugin metadata.
