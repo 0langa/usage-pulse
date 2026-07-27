@@ -110,3 +110,16 @@ def test_hook_wrappers_bootstrap_source_tree_for_direct_execution() -> None:
         source = (root / "hooks" / name).read_text(encoding="utf-8")
         assert 'sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))' in source
         assert f'sys.argv.append("{event}")' in source
+
+
+def test_mcp_manifests_launch_from_plugin_project_root() -> None:
+    root = Path(__file__).resolve().parents[1]
+    payloads = (
+        json.loads((root / ".mcp.json").read_text(encoding="utf-8")),
+        json.loads((root / ".codex-mcp.json").read_text(encoding="utf-8")),
+        json.loads((root / "kimi.plugin.json").read_text(encoding="utf-8")),
+    )
+    for payload in payloads:
+        args = payload["mcpServers"]["usage-pulse"]["args"]
+        assert args[:3] == ["run", "--project", "."]
+        assert "--with-editable" not in args

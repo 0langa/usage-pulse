@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.5] - 2026-07-27
+
+- Regenerated provider MCP configs with Plugin Forge 0.2.4 so cached installs launch from their own project root.
+- Added regression coverage preventing host-directory editable installs in MCP launch arguments.
+
 ## [0.1.4] - 2026-07-27
 
 - Fixed Codex and Claude MCP startup when launching `python -m usage_pulse.mcp_server`.

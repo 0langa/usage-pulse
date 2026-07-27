@@ -1,6 +1,6 @@
 {
   "name": "usage-pulse",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Local passive usage telemetry for Claude Code, Codex, and Kimi Code sessions.",
   "author": {
     "name": "0langa"
@@ -34,7 +34,7 @@
       "command": "uv",
       "args": [
         "run",
-        "--with-editable",
+        "--project",
         ".",
         "python",
         "-m",
