@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.6] - 2026-07-27
+
+- Fixed the Claude Code MCP server failing to start with `ModuleNotFoundError: No module named 'usage_pulse'`. Claude Code launches plugin MCP servers from the session working directory, so the relative `--project .` pointed at the user's repo instead of the cached plugin. Both `--project` and `cwd` now use `${CLAUDE_PLUGIN_ROOT}`.
+- Codex and Kimi MCP configs are unchanged.
+
 ## [0.1.5] - 2026-07-27
 
 - Regenerated provider MCP configs with Plugin Forge 0.2.4 so cached installs launch from their own project root.

@@ -114,12 +114,23 @@ def test_hook_wrappers_bootstrap_source_tree_for_direct_execution() -> None:
 
 def test_mcp_manifests_launch_from_plugin_project_root() -> None:
     root = Path(__file__).resolve().parents[1]
-    payloads = (
-        json.loads((root / ".mcp.json").read_text(encoding="utf-8")),
-        json.loads((root / ".codex-mcp.json").read_text(encoding="utf-8")),
-        json.loads((root / "kimi.plugin.json").read_text(encoding="utf-8")),
-    )
-    for payload in payloads:
-        args = payload["mcpServers"]["usage-pulse"]["args"]
-        assert args[:3] == ["run", "--project", "."]
-        assert "--with-editable" not in args
+
+    def entry(name: str) -> dict:
+        payload = json.loads((root / name).read_text(encoding="utf-8"))
+        return payload["mcpServers"]["usage-pulse"]
+
+    # Claude Code spawns plugin MCP servers with the *session* working directory,
+    # so a relative project path resolves into the user's repo and the server dies
+    # with ModuleNotFoundError. Only ${CLAUDE_PLUGIN_ROOT} survives that.
+    claude = entry(".mcp.json")
+    assert claude["args"][:3] == ["run", "--project", "${CLAUDE_PLUGIN_ROOT}"]
+    assert claude["cwd"] == "${CLAUDE_PLUGIN_ROOT}"
+
+    # Codex and Kimi resolve relative paths against the plugin root already.
+    for name in (".codex-mcp.json", "kimi.plugin.json"):
+        other = entry(name)
+        assert other["args"][:3] == ["run", "--project", "."]
+        assert "${CLAUDE_PLUGIN_ROOT}" not in json.dumps(other)
+
+    for name in (".mcp.json", ".codex-mcp.json", "kimi.plugin.json"):
+        assert "--with-editable" not in entry(name)["args"]
