@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import json
+import runpy
+import sys
 from pathlib import Path
 
+from mcp.server.fastmcp import FastMCP
 from pytest import MonkeyPatch
 
 from usage_pulse.db import iso
@@ -16,6 +19,20 @@ from usage_pulse.mcp_server import (
     pulse_top,
     pulse_wipe,
 )
+
+
+def test_module_entrypoint_starts_mcp(monkeypatch: MonkeyPatch) -> None:
+    started = False
+
+    def fake_run(self: FastMCP) -> None:
+        nonlocal started
+        started = True
+
+    monkeypatch.setattr(FastMCP, "run", fake_run)
+    monkeypatch.delitem(sys.modules, "usage_pulse.mcp_server", raising=False)
+    runpy.run_module("usage_pulse.mcp_server", run_name="__main__")
+
+    assert started is True
 
 
 def test_mcp_tools_return_structured_json(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:

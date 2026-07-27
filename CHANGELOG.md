@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.4] - 2026-07-27
+
+- Fixed Codex and Claude MCP startup when launching `python -m usage_pulse.mcp_server`.
+- Added module-entrypoint regression coverage.
+- Made all hook wrappers self-bootstrap bundled source when provider runtimes invoke them directly.
+
 ## [0.1.3] - 2026-07-13
 
 - Removed duplicate Claude hook declaration and rely on standard `hooks/hooks.json` autodiscovery.

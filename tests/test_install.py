@@ -94,3 +94,19 @@ def test_plugin_manifests_keep_provider_specific_hook_wiring() -> None:
                 assert "uv run --project \"$root\" python" in hook["command"]
                 assert "uv run --project $root python" in hook["commandWindows"]
                 assert '"--provider" "codex"' in hook["command"]
+
+
+def test_hook_wrappers_bootstrap_source_tree_for_direct_execution() -> None:
+    root = Path(__file__).resolve().parents[1]
+    wrappers = {
+        "session_start.py": "SessionStart",
+        "user_prompt_submit.py": "UserPromptSubmit",
+        "pre_tool_use.py": "PreToolUse",
+        "post_tool_use.py": "PostToolUse",
+        "pre_compact.py": "PreCompact",
+        "stop.py": "Stop",
+    }
+    for name, event in wrappers.items():
+        source = (root / "hooks" / name).read_text(encoding="utf-8")
+        assert 'sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))' in source
+        assert f'sys.argv.append("{event}")' in source
