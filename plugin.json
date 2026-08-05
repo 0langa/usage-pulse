@@ -1,6 +1,6 @@
 {
   "name": "usage-pulse",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Local Usage Pulse tools for Kimi Code.",
   "tools": [
     {

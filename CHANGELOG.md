@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.7] - 2026-08-05
+
+- Aligned runtime and legacy manifest version metadata with generated provider manifests.
+- Added regression coverage for provider install-version parity.
+
 ## [0.1.6] - 2026-07-27
 
 - Fixed the Claude Code MCP server failing to start with `ModuleNotFoundError: No module named 'usage_pulse'`. Claude Code launches plugin MCP servers from the session working directory, so the relative `--project .` pointed at the user's repo instead of the cached plugin. Both `--project` and `cwd` now use `${CLAUDE_PLUGIN_ROOT}`.
