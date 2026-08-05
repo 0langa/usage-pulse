@@ -4,7 +4,7 @@ import importlib.util
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from pytest import MonkeyPatch
 
@@ -115,9 +115,10 @@ def test_hook_wrappers_bootstrap_source_tree_for_direct_execution() -> None:
 def test_mcp_manifests_launch_from_plugin_project_root() -> None:
     root = Path(__file__).resolve().parents[1]
 
-    def entry(name: str) -> dict:
-        payload = json.loads((root / name).read_text(encoding="utf-8"))
-        return payload["mcpServers"]["usage-pulse"]
+    def entry(name: str) -> dict[str, Any]:
+        payload = cast(dict[str, Any], json.loads((root / name).read_text(encoding="utf-8")))
+        servers = cast(dict[str, Any], payload["mcpServers"])
+        return cast(dict[str, Any], servers["usage-pulse"])
 
     # Claude Code spawns plugin MCP servers with the *session* working directory,
     # so a relative project path resolves into the user's repo and the server dies
