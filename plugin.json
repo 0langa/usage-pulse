@@ -1,12 +1,21 @@
 {
   "name": "usage-pulse",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Local Usage Pulse tools for Kimi Code.",
   "tools": [
     {
       "name": "pulse_today",
       "description": "Return today's Usage Pulse totals as JSON.",
-      "command": ["uv", "run", "--project", ".", "python", "-m", "usage_pulse.kimi_tool", "today"],
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        ".",
+        "python",
+        "-m",
+        "usage_pulse.kimi_tool",
+        "today"
+      ],
       "parameters": {
         "type": "object",
         "properties": {}

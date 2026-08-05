@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.1.8] - 2026-08-05
+
+- Pending release notes.
+
 ## [0.1.7] - 2026-08-05
 
 - Aligned runtime and legacy manifest version metadata with generated provider manifests.

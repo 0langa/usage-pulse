@@ -127,11 +127,28 @@ def test_mcp_manifests_launch_from_plugin_project_root() -> None:
     assert claude["args"][:3] == ["run", "--project", "${CLAUDE_PLUGIN_ROOT}"]
     assert claude["cwd"] == "${CLAUDE_PLUGIN_ROOT}"
 
-    # Codex and Kimi resolve relative paths against the plugin root already.
-    for name in (".codex-mcp.json", "kimi.plugin.json"):
-        other = entry(name)
-        assert other["args"][:3] == ["run", "--project", "."]
-        assert "${CLAUDE_PLUGIN_ROOT}" not in json.dumps(other)
+    # Codex resolves relative paths against the plugin root already.
+    codex = entry(".codex-mcp.json")
+    assert codex["args"][:3] == ["run", "--project", "."]
+    assert "${CLAUDE_PLUGIN_ROOT}" not in json.dumps(codex)
 
-    for name in (".mcp.json", ".codex-mcp.json", "kimi.plugin.json"):
+    # Kimi's Windows host may not inherit uv on PATH. Forge emits cmd.exe plus
+    # a portable runner that finds uv from its standard user install location.
+    kimi = entry("kimi.plugin.json")
+    assert kimi["command"] == "cmd.exe"
+    assert kimi["args"] == [
+        "/d",
+        "/s",
+        "/c",
+        "scripts\\kimi-uv-mcp.cmd",
+        "-m",
+        "usage_pulse.mcp_server",
+    ]
+    assert kimi["cwd"] == "./"
+    assert "${CLAUDE_PLUGIN_ROOT}" not in json.dumps(kimi)
+    launcher = root / "scripts" / "kimi-uv-mcp.cmd"
+    assert launcher.exists()
+    assert "%USERPROFILE%\\.local\\bin\\uv.exe" in launcher.read_text(encoding="utf-8")
+
+    for name in (".mcp.json", ".codex-mcp.json"):
         assert "--with-editable" not in entry(name)["args"]

@@ -1,6 +1,6 @@
 {
   "name": "usage-pulse",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Local passive usage telemetry for Claude Code, Codex, and Kimi Code sessions.",
   "author": {
     "name": "0langa"
@@ -31,12 +31,12 @@
   "skillInstructions": "Use Usage Pulse only for local usage summaries and hygiene. Do not estimate pay-as-you-go spend.",
   "mcpServers": {
     "usage-pulse": {
-      "command": "uv",
+      "command": "cmd.exe",
       "args": [
-        "run",
-        "--project",
-        ".",
-        "python",
+        "/d",
+        "/s",
+        "/c",
+        "scripts\\kimi-uv-mcp.cmd",
         "-m",
         "usage_pulse.mcp_server"
       ],
