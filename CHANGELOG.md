@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.9] - 2026-09-09
+
+- Fix MCP dispatch for `pulse.range` and `pulse.export` by accepting the public `from` argument while passing Python's `from_` parameter internally.
+- Exercise filtered and default range/export calls through FastMCP dispatch in regression coverage.
+
 ## [0.1.8] - 2026-08-05
 
 - Pending release notes.

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import runpy
 import sys
@@ -11,6 +12,7 @@ from pytest import MonkeyPatch
 from usage_pulse.db import iso
 from usage_pulse.hooks import handle_event
 from usage_pulse.mcp_server import (
+    mcp,
     pulse_compare,
     pulse_export,
     pulse_range,
@@ -94,3 +96,38 @@ def test_mcp_tools_return_structured_json(tmp_path: Path, monkeypatch: MonkeyPat
     assert "delta" in pulse_compare(window="1d")
     assert Path(pulse_export(format="csv", to=str(tmp_path / "out.csv"))["path"]).exists()
     assert pulse_wipe(confirm=False)["wiped"] is False
+
+
+def test_range_and_export_dispatch_public_from_argument(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+) -> None:
+    monkeypatch.setenv("USAGE_PULSE_HOME", str(tmp_path))
+    for session, timestamp in [("before", "2026-01-01T12:00:00Z"), ("inside", "2026-01-02T12:00:00Z")]:
+        handle_event("SessionStart", json.dumps({
+            "session_id": session, "cwd": str(tmp_path), "timestamp": timestamp,
+        }), "codex")
+
+    async def exercise() -> None:
+        schemas = {tool.name: tool.inputSchema for tool in await mcp.list_tools()}
+        for name in ("pulse.range", "pulse.export"):
+            assert "from" in schemas[name]["properties"]
+            assert "from_" not in schemas[name]["properties"]
+
+        start, end = "2026-01-02T00:00:00Z", "2026-01-03T00:00:00Z"
+        ranged = await mcp.call_tool("pulse.range", {"from": start, "to": end})
+        assert isinstance(ranged, tuple)
+        assert ranged[1]["totals"]["sessions"] == 1
+        default_range = await mcp.call_tool("pulse.range", {})
+        assert isinstance(default_range, tuple)
+        assert "totals" in default_range[1]
+
+        for arguments in ({"from": start, "until": end}, {}):
+            destination = tmp_path / ("filtered.json" if arguments else "default.json")
+            exported = await mcp.call_tool("pulse.export", {"to": str(destination), **arguments})
+            assert isinstance(exported, tuple)
+            assert Path(exported[1]["path"]) == destination
+            assert destination.is_file()
+        filtered = json.loads((tmp_path / "filtered.json").read_text(encoding="utf-8"))
+        assert filtered["totals"]["sessions"] == 1
+
+    asyncio.run(exercise())

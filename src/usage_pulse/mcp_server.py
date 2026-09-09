@@ -29,7 +29,7 @@ def pulse_session(id: str = "current") -> JsonObject:
 
 @mcp.tool(name="pulse.range")
 def pulse_range(
-    from_: Annotated[str | None, Field(alias="from")] = None,
+    from_: Annotated[str | None, Field(validation_alias="from")] = None,
     to: str | None = None,
     group_by: Literal["day", "provider", "project"] = "day",
 ) -> JsonObject:
@@ -57,7 +57,7 @@ def pulse_compare(window: str = "7d") -> JsonObject:
 def pulse_export(
     format: Literal["json", "csv"] = "json",
     to: str = "usage-pulse-export.json",
-    from_: Annotated[str | None, Field(alias="from")] = None,
+    from_: Annotated[str | None, Field(validation_alias="from")] = None,
     until: str | None = None,
 ) -> JsonObject:
     """Export usage data to JSON or CSV."""

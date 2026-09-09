@@ -1,5 +1,5 @@
 # Usage Pulse — Status & Roadmap
-_Portfolio audit: 2026-07-11_
+_Release verification: 2026-09-09; longer-term roadmap retained from the portfolio audit._
 
 ## What this is
 
@@ -13,9 +13,11 @@ plugin-forge.
 
 ## Current state
 
-This is the most finished of the four portfolio projects — **v0.1.6 is tagged and released**
-(CHANGELOG dated 2026-07-27). The package metadata, Forge spec, runtime package, legacy
-`plugin.json`, and active provider manifests agree on 0.1.6.
+**Source release v0.1.9** fixes MCP dispatch for the public `from` argument in
+`pulse.range` and `pulse.export`. Filtered and default calls pass through real FastMCP
+dispatch in regression tests. Package metadata, Forge spec, runtime package, legacy
+`plugin.json`, and active provider manifests agree on 0.1.9. Product polish and the
+longer-term roadmap below remain separate work.
 
 What works:
 
@@ -41,7 +43,7 @@ Gaps and loose ends:
   (`tests/test_hooks_and_db.py`, `test_install.py`, `test_mcp_server.py`) against roughly
   1,080 lines of source.
 - The CI workflow defines Ruff, mypy, and pytest gates on Windows and Linux; a remote first run
-  is still required after publishing the source changes.
+  is checked for each published release before reporting CI completion.
 
 ## Definition of "finished"
 
