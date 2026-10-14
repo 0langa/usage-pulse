@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.11] - 2026-10-15
+
+- Tool-call durations now use the tool time the host reports in the hook payload (Claude Code's `duration_ms`), so permission prompts and hook startup no longer count. Without it, the duration is the time between the PreToolUse and PostToolUse events, taken from the payloads' own timestamps when they carry one.
+- Payload timestamps are stored as UTC ISO 8601 and may be ISO strings or Unix seconds or milliseconds. Before, a numeric timestamp made the hook event fail.
+- Upgrade note: on its first run after the upgrade, the database merges the duplicate tool-call rows recorded before 0.1.10 (an open "started" row plus a separate completed row per call), so top-tool and per-session tool counts stop counting those calls twice. This runs once, keeps every completed call and leaves session totals unchanged. Calls already stored as one row, including fast calls whose two events carry the same host timestamp, are left as they are, and repaired rows keep the 0 ms duration they were recorded with.
+- The install test no longer runs the real `codex plugin add`, so running the test suite cannot register the plugin in your real `~/.codex`.
+
 ## [0.1.10] - 2026-10-14
 
 - Fix tool-call telemetry for Claude Code and Codex: hooks now pair PreToolUse and PostToolUse by the `tool_use_id` both hosts send and read the `tool_response` output, so each call records one row with its real duration and output size instead of an orphan "started" row plus a 0 ms, 2-byte row.
