@@ -154,7 +154,14 @@ def record_post_tool(
 ) -> None:
     tool_name = tool_name_from_payload(payload)
     call_id = call_id_from_payload(payload, session_id, tool_name, timestamp)
-    output = payload.get("tool_output") or payload.get("output") or payload.get("result") or ""
+    # Claude Code and Codex send the tool result as `tool_response`.
+    output = (
+        payload.get("tool_response")
+        or payload.get("tool_output")
+        or payload.get("output")
+        or payload.get("result")
+        or ""
+    )
     error = scalar(payload, "error", "error_message")
     success = normalized != "posttoolusefailure" and not error
     output_bytes = len(json.dumps(output, default=str).encode("utf-8"))
@@ -180,7 +187,9 @@ def tool_name_from_payload(payload: JsonObject) -> str:
 def call_id_from_payload(
     payload: JsonObject, session_id: str, tool_name: str, timestamp: str
 ) -> str:
-    explicit = scalar(payload, "tool_call_id", "call_id", "id")
+    # Claude Code and Codex identify the call with `tool_use_id`; neither sends a timestamp,
+    # so without it PreToolUse and PostToolUse derive different fallback ids.
+    explicit = scalar(payload, "tool_use_id", "tool_call_id", "call_id", "id")
     if explicit:
         return explicit
     return str(uuid.uuid5(uuid.NAMESPACE_URL, f"{session_id}:{tool_name}:{timestamp}"))
@@ -219,7 +228,9 @@ def maybe_record_web_search(
         query = str(
             tool_input.get("query") or tool_input.get("q") or tool_input.get("search_query") or ""
         )
-    output = payload.get("tool_output") or payload.get("output") or []
+    output = (
+        payload.get("tool_response") or payload.get("tool_output") or payload.get("output") or []
+    )
     result_count = len(output) if isinstance(output, list) else None
     db.record_web_search(
         session_id=session_id,
