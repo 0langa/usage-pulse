@@ -84,19 +84,22 @@ def merge_unpaired_tool_calls(conn: sqlite3.Connection) -> None:
 
     Until then the hooks never paired PreToolUse with PostToolUse: each event
     derived its own fallback id, so one call stored an open "started" row and
-    a separate completed row whose start time is its completion time. Per
-    session and tool, each such completed row absorbs the latest open row
-    before it (its start time and input size) and the open row is deleted, so
-    the call is counted once. Open rows with no completion after them, such
-    as a call still running, are kept. A merged row no longer starts when it
-    completes, so running this again changes nothing. Session totals never
+    a separate completed row whose start time is its completion time. Only
+    the completion wrote that row, so its input size is 0; a row PreToolUse
+    wrote always has one (at least `{}`). Per session and tool, each such
+    completed row absorbs the latest open row before it (its start time and
+    input size) and the open row is deleted, so the call is counted once.
+    Open rows with no completion after them, such as a call still running,
+    are kept, and so is a call whose two events shared one fallback id
+    because they carried the same host timestamp. A merged row has an input
+    size, so running this again changes nothing. Session totals never
     counted the open rows and stay as they are.
     """
     rows = conn.execute(
         """
         SELECT rowid, id, session_id, provider, name, timestamp, completed_at, input_bytes
         FROM tool_calls
-        WHERE completed_at IS NULL OR completed_at = timestamp
+        WHERE completed_at IS NULL OR (completed_at = timestamp AND input_bytes = 0)
         """
     ).fetchall()
     calls: dict[tuple[str, str, str], list[tuple[datetime, bool, int, sqlite3.Row]]] = {}

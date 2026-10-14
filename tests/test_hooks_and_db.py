@@ -290,3 +290,32 @@ def test_migrate_merges_tool_calls_recorded_twice_before_pairing(
     with closing(sqlite3.connect(db_path)) as conn:
         versions = [row[0] for row in conn.execute("SELECT version FROM schema_migrations")]
     assert versions.count("repair_001_merge_unpaired_tool_calls") == 1
+
+
+def test_migrate_keeps_a_call_paired_by_a_shared_host_timestamp(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+) -> None:
+    # A host clock with whole seconds can give a fast call's two events one
+    # timestamp, so both derive one fallback id and the call is a single row
+    # that starts when it completes. It is not a duplicate: the repair must
+    # not let it swallow the open row of an earlier call that never completed.
+    monkeypatch.setenv("USAGE_PULSE_HOME", str(tmp_path))
+    db_path = tmp_path / "pulse.db"
+    common = {"session_id": "old", "cwd": str(tmp_path), "tool_name": "Bash"}
+
+    def event(name: str, stamp: str, **extra: object) -> None:
+        handle_event(name, json.dumps({**common, "timestamp": stamp, **extra}), "codex")
+
+    event("PreToolUse", "2026-07-01T10:00:00+00:00", tool_input={"command": "false"})
+    event("PreToolUse", "2026-07-01T10:00:05+00:00", tool_input={"command": "true"})
+    event("PostToolUse", "2026-07-01T10:00:05+00:00", tool_response="")
+    rows = tool_rows(db_path)
+    assert [(row[1], row[2]) for row in rows] == [
+        ("2026-07-01T10:00:00+00:00", None),
+        ("2026-07-01T10:00:05+00:00", "2026-07-01T10:00:05+00:00"),
+    ]
+
+    with closing(sqlite3.connect(db_path)) as conn, conn:
+        conn.execute("DELETE FROM schema_migrations WHERE version LIKE 'repair_%'")
+    PulseDB(db_path).migrate()
+    assert tool_rows(db_path) == rows
