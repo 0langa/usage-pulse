@@ -10,10 +10,11 @@ import subprocess
 import sys
 import traceback
 import uuid
+from datetime import UTC, datetime
 from typing import Any
 
 from usage_pulse.config import provider_from_env
-from usage_pulse.db import PulseDB, iso, new_session_id
+from usage_pulse.db import PulseDB, iso, new_session_id, parse_time
 from usage_pulse.tokens import estimate_tokens
 
 JsonObject = dict[str, Any]
@@ -40,7 +41,7 @@ def handle_event(event: str, raw_payload: str, provider: str) -> str | None:
     payload = parse_payload(raw_payload)
     db = PulseDB()
     db.migrate()
-    timestamp = str(payload.get("timestamp") or iso())
+    timestamp = event_time(payload)
     host_session_id = scalar(payload, "session_id", "transcript_path", "conversation_id")
     session_id = session_uuid(provider, host_session_id)
     cwd = scalar(payload, "cwd") or os.getcwd()
@@ -92,6 +93,25 @@ def parse_payload(raw_payload: str) -> JsonObject:
         return {}
     value = json.loads(raw_payload)
     return value if isinstance(value, dict) else {"value": value}
+
+
+def event_time(payload: JsonObject) -> str:
+    """When the host says the event happened, as UTC ISO 8601; else now.
+
+    A host timestamp leaves this hook's own startup out of the durations
+    measured between two events. ISO strings and Unix epoch seconds or
+    milliseconds are accepted.
+    """
+    value = payload.get("timestamp")
+    try:
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            seconds = value / 1000 if value > 100_000_000_000 else value
+            return iso(datetime.fromtimestamp(seconds, UTC))
+        if isinstance(value, str) and value.strip():
+            return iso(parse_time(value.strip()))
+    except (OverflowError, OSError, ValueError):
+        pass
+    return iso()
 
 
 def normalize_event(event: str) -> str:
@@ -174,6 +194,9 @@ def record_post_tool(
         output_bytes=output_bytes,
         error=error,
         timestamp=timestamp,
+        # Claude Code reports the tool's own run time, without permission
+        # prompts and PreToolUse hooks; prefer it to the hook-to-hook time.
+        duration_ms=int_or_none(payload.get("duration_ms")),
     )
     maybe_record_web_search(db, session_id, tool_name, payload, timestamp)
     maybe_record_mcp(db, session_id, provider, tool_name, payload, timestamp, success)

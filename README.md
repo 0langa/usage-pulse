@@ -19,6 +19,10 @@ Usage Pulse does not store prompt bodies. It stores prompt length, a SHA-256 has
 - Subagent invocations when exposed by provider payloads.
 - Hook fires and compaction events.
 
+A tool call's duration is the tool time the host reports (Claude Code's `duration_ms`) when the payload has it. Otherwise it is the time between the PreToolUse and PostToolUse events, taken from the payloads' timestamps when they carry one (ISO 8601 or Unix seconds or milliseconds). Without a host timestamp, a hook stamps the event after it has started, so its startup time ends up in the duration.
+
+On its first run after an upgrade, the database merges the duplicate tool-call rows that versions before 0.1.10 recorded: an open "started" row plus a separate completed row for the same call. This happens once and keeps every completed call.
+
 ## Install
 
 ```powershell

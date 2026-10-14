@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import uuid
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -71,6 +71,70 @@ def new_session_id(provider: str, host_session_id: str | None = None) -> str:
     return str(uuid.uuid4())
 
 
+def is_fallback_call_id(call_id: str) -> bool:
+    """True for the uuid5 id the hooks derive when the host sends no tool call id."""
+    try:
+        return str(uuid.UUID(call_id)) == call_id and uuid.UUID(call_id).version == 5
+    except ValueError:
+        return False
+
+
+def merge_unpaired_tool_calls(conn: sqlite3.Connection) -> None:
+    """Merge the two rows that each tool call left before 0.1.10.
+
+    Until then the hooks never paired PreToolUse with PostToolUse: each event
+    derived its own fallback id, so one call stored an open "started" row and
+    a separate completed row whose start time is its completion time. Per
+    session and tool, each such completed row absorbs the latest open row
+    before it (its start time and input size) and the open row is deleted, so
+    the call is counted once. Open rows with no completion after them, such
+    as a call still running, are kept. A merged row no longer starts when it
+    completes, so running this again changes nothing. Session totals never
+    counted the open rows and stay as they are.
+    """
+    rows = conn.execute(
+        """
+        SELECT rowid, id, session_id, provider, name, timestamp, completed_at, input_bytes
+        FROM tool_calls
+        WHERE completed_at IS NULL OR completed_at = timestamp
+        """
+    ).fetchall()
+    calls: dict[tuple[str, str, str], list[tuple[datetime, bool, int, sqlite3.Row]]] = {}
+    for row in rows:
+        if not is_fallback_call_id(str(row["id"])):
+            continue
+        try:
+            started = parse_time(str(row["timestamp"]))
+        except ValueError:
+            continue
+        completed = row["completed_at"] is not None
+        key = (str(row["session_id"]), str(row["provider"]), str(row["name"]))
+        calls.setdefault(key, []).append((started, completed, int(row["rowid"]), row))
+    for events in calls.values():
+        # At equal times an open row sorts before a completed one.
+        events.sort(key=lambda event: event[:3])
+        open_rows: list[sqlite3.Row] = []
+        for _, completed, _, row in events:
+            if not completed:
+                open_rows.append(row)
+                continue
+            if not open_rows:
+                continue
+            start = open_rows.pop()
+            conn.execute(
+                "UPDATE tool_calls SET timestamp = ?, input_bytes = max(input_bytes, ?) WHERE id = ?",
+                (start["timestamp"], start["input_bytes"], row["id"]),
+            )
+            conn.execute("DELETE FROM tool_calls WHERE id = ?", (start["id"],))
+
+
+# Data repairs that plain SQL migrations cannot express. Each runs once, after
+# the SQL migrations, and is recorded in schema_migrations under its version.
+DATA_REPAIRS: tuple[tuple[str, Callable[[sqlite3.Connection], None]], ...] = (
+    ("repair_001_merge_unpaired_tool_calls", merge_unpaired_tool_calls),
+)
+
+
 class PulseDB:
     def __init__(self, db_path: Path | None = None, migrations_dir: Path | None = None) -> None:
         self.db_path = db_path or paths().db_path
@@ -106,6 +170,15 @@ class PulseDB:
                 conn.executescript(path.read_text(encoding="utf-8"))
                 conn.execute(
                     "INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
+                    (version, iso()),
+                )
+            for version, repair in DATA_REPAIRS:
+                if version in applied:
+                    continue
+                repair(conn)
+                # OR IGNORE: two hooks can start at once; the repair is idempotent.
+                conn.execute(
+                    "INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (?, ?)",
                     (version, iso()),
                 )
 
@@ -228,40 +301,48 @@ class PulseDB:
         output_bytes: int,
         error: str | None,
         timestamp: str,
+        duration_ms: int | None = None,
     ) -> None:
+        """Complete a tool call.
+
+        `duration_ms` is the tool time the host reported, if any. Without it the
+        duration is the time between the two hook events, which also counts the
+        PreToolUse hook's own run (interpreter startup included).
+        """
         with self.connect() as conn:
             existing = conn.execute(
                 "SELECT timestamp FROM tool_calls WHERE id = ?", (call_id,)
             ).fetchone()
             if existing is None:
-                started = timestamp
-                duration_ms = 0
+                elapsed_ms = 0
                 conn.execute(
                     """
                     INSERT INTO tool_calls(id, session_id, timestamp, provider, name)
                     VALUES (?, ?, ?, ?, ?)
                     """,
-                    (call_id, session_id, started, provider, name),
+                    (call_id, session_id, timestamp, provider, name),
                 )
             else:
                 started = str(existing["timestamp"])
-                duration_ms = max(
+                elapsed_ms = max(
                     0, int((parse_time(timestamp) - parse_time(started)).total_seconds() * 1000)
                 )
+            if duration_ms is not None and duration_ms >= 0:
+                elapsed_ms = duration_ms
             conn.execute(
                 """
                 UPDATE tool_calls
                 SET completed_at=?, duration_ms=?, success=?, output_bytes=?, error=?
                 WHERE id=?
                 """,
-                (timestamp, duration_ms, int(success), output_bytes, error, call_id),
+                (timestamp, elapsed_ms, int(success), output_bytes, error, call_id),
             )
         self._bump(
             session_id,
             tool_call_count=1,
             tool_success_count=1 if success else 0,
             tool_failure_count=0 if success else 1,
-            tool_duration_ms=duration_ms,
+            tool_duration_ms=elapsed_ms,
             tool_output_bytes=output_bytes,
         )
 
