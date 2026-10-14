@@ -36,6 +36,12 @@ def test_install_and_uninstall_against_temp_home(tmp_path: Path, monkeypatch: Mo
         "USAGE_PULSE_KIMI_PLUGIN_DIR",
         str(tmp_path / ".kimi-code" / "plugins" / "managed" / "usage-pulse"),
     )
+    # Point the Codex CLI at the temp home too, and never actually run it: install_codex()
+    # shells out to `codex plugin add`, which would otherwise register the plugin in the
+    # real ~/.codex on any machine where codex is on PATH.
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path / ".codex"))
+    cli_calls: list[list[str]] = []
+    monkeypatch.setattr(install, "run_optional", lambda args, receipt: cli_calls.append(args))
     source = Path(__file__).resolve().parents[1]
 
     for provider in ["claude", "codex", "kimi"]:
@@ -43,6 +49,7 @@ def test_install_and_uninstall_against_temp_home(tmp_path: Path, monkeypatch: Mo
         install.install_provider(provider, source, receipt)
         receipt.save(tmp_path / ".usage-pulse" / "install-receipt.json")
 
+    assert cli_calls == [["codex", "plugin", "add", "usage-pulse@personal"]]
     assert not (tmp_path / ".claude" / "settings.json").exists()
     codex_config = (tmp_path / ".codex" / "config.toml").read_text(encoding="utf-8")
     assert '[plugins."usage-pulse@personal"]' in codex_config
