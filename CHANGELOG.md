@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.10] - 2026-10-14
+
+- Fix tool-call telemetry for Claude Code and Codex: hooks now pair PreToolUse and PostToolUse by the `tool_use_id` both hosts send and read the `tool_response` output, so each call records one row with its real duration and output size instead of an orphan "started" row plus a 0 ms, 2-byte row.
+- Lock patched versions of four transitive dependencies (pyjwt 2.15.0, urllib3 2.8.0, anyio 4.14.2, cryptography 50.0.0) to clear their known advisories. Direct dependency ranges are unchanged.
+
 ## [0.1.9] - 2026-09-09
 
 - Fix MCP dispatch for `pulse.range` and `pulse.export` by accepting the public `from` argument while passing Python's `from_` parameter internally.
