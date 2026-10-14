@@ -69,6 +69,40 @@ def test_hooks_record_session_prompt_tool_and_summary(
     assert row == (1, 1, 1, 5)
 
 
+def test_hooks_pair_tool_calls_from_real_provider_payloads(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+) -> None:
+    # Claude Code and Codex payloads carry tool_use_id and tool_response, and no timestamp.
+    monkeypatch.setenv("USAGE_PULSE_HOME", str(tmp_path))
+    common = {
+        "session_id": "abc123",
+        "transcript_path": str(tmp_path / "t.jsonl"),
+        "cwd": str(tmp_path),
+        "permission_mode": "default",
+        "tool_name": "Bash",
+        "tool_input": {"command": "echo hello"},
+        "tool_use_id": "toolu_01ABC123",
+    }
+    response = {"stdout": "hello", "stderr": "", "interrupted": False}
+    handle_event("PreToolUse", json.dumps({**common, "hook_event_name": "PreToolUse"}), "claude")
+    handle_event(
+        "PostToolUse",
+        json.dumps({**common, "hook_event_name": "PostToolUse", "tool_response": response}),
+        "claude",
+    )
+
+    with closing(sqlite3.connect(tmp_path / "pulse.db")) as conn:
+        rows = conn.execute(
+            "SELECT id, completed_at, success, output_bytes FROM tool_calls"
+        ).fetchall()
+    assert len(rows) == 1
+    call_id, completed_at, success, output_bytes = rows[0]
+    assert call_id == "toolu_01ABC123"
+    assert completed_at is not None
+    assert success == 1
+    assert output_bytes == len(json.dumps(response).encode("utf-8"))
+
+
 def test_db_aggregates_top_compare_export_and_wipe(tmp_path: Path) -> None:
     db = PulseDB(tmp_path / "pulse.db")
     sid = "00000000-0000-0000-0000-000000000001"
