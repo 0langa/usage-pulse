@@ -1,5 +1,5 @@
 name: usage-pulse
-version: 0.1.12
+version: 0.1.13
 description: 'Dormant: View local reports of your coding-agent activity.'
 providers:
 - claude

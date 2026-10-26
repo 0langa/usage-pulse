@@ -1,6 +1,6 @@
 {
   "name": "usage-pulse",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Dormant: Local Usage Pulse tools for Kimi Code. Available as-is, with no planned updates.",
   "tools": [
     {
