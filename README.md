@@ -1,5 +1,8 @@
 # Usage Pulse
 
+> **Dormant:** Available as-is, with no planned updates. This plugin is no longer part of my maintained workflow. Existing releases remain installable.
+> Kimi compatibility is legacy and is not actively tested.
+
 Usage Pulse is local, passive per-session usage telemetry for Claude Code, Codex, and Kimi Code.
 
 It is hook-driven and fail-open. Hooks write local counters to `~/.usage-pulse/pulse.db`, log failures to `~/.usage-pulse/errors.log`, and never block the provider session.

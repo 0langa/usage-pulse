@@ -1,7 +1,7 @@
 [project]
 name = "usage-pulse"
-version = "0.1.11"
-description = "Local passive usage telemetry for Claude Code, Codex, and Kimi Code sessions."
+version = "0.1.12"
+description = "Dormant: View local reports of your coding-agent activity."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }

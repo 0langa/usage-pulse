@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.12 - 2026-10-26
+
+- Mark the plugin dormant while keeping existing functionality and installation IDs.
+- Publish through https://github.com/0langa/plugins; Kimi compatibility is legacy.
+
 ## [0.1.11] - 2026-10-15
 
 - Tool-call durations now use the tool time the host reports in the hook payload (Claude Code's `duration_ms`), so permission prompts and hook startup no longer count. Without it, the duration is the time between the PreToolUse and PostToolUse events, taken from the payloads' own timestamps when they carry one.
